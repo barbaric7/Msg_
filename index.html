@@ -63,7 +63,7 @@
       }
     }
 
-    // Listen for new messages in real-time
+    // Listen for new messages in real-time for both sender and receiver
     onChildAdded(ref(database, 'messages/'), (snapshot) => {
       const messages = snapshot.val();
       const recipientId = snapshot.key;
@@ -73,9 +73,11 @@
         for (const key in messages) {
           const msg = messages[key];
           const messageElement = document.createElement("div");
-          messageElement.innerText = `${msg.sender}: ${msg.text}`;
+          messageElement.classList.add(msg.sender === currentUserId ? "message-sender" : "message-receiver");
+          messageElement.innerText = `${msg.sender === currentUserId ? "You" : msg.sender}: ${msg.text}`;
           messagesDiv.appendChild(messageElement);
         }
+        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
       }
     });
   </script>
@@ -124,9 +126,27 @@
       background-color: #222222;
       padding: 10px;
       border-radius: 5px;
+      margin-bottom: 20px;
     }
     #messages div {
       margin: 5px 0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .message-sender {
+      background-color: #1e88e5;
+      color: #fff;
+      text-align: right;
+      margin-left: 50px;
+    }
+    .message-receiver {
+      background-color: #333333;
+      color: #fff;
+      text-align: left;
+      margin-right: 50px;
+    }
+    #recipientId, #message {
+      margin-bottom: 20px;
     }
   </style>
 </head>
