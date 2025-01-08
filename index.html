@@ -110,6 +110,7 @@
                 const username = document.getElementById("username").value.trim();
                 if (username) {
                     const userId = `user_${Date.now()}`;
+                    // Store user with their username
                     database.ref("users/" + userId).set({ username });
                     alert(`Registered successfully! Your Unique ID: ${userId}`);
                     currentUserId = userId;
@@ -130,20 +131,21 @@
                         text: messageText,
                         timestamp: Date.now()
                     };
+                    // Store the message in the database under recipient's ID
                     database.ref("messages/" + recipientId).push(message);
-                    document.getElementById("message").value = "";
+                    document.getElementById("message").value = ""; // Clear message input
                 } else {
                     alert("Please enter both recipient ID and a message.");
                 }
             }
 
-            // Listen for incoming messages
+            // Listen for incoming messages and display them
             database.ref("messages/").on("child_added", (snapshot) => {
                 const recipientId = snapshot.key;
                 if (recipientId === currentUserId) {
                     const messages = snapshot.val();
                     const messagesDiv = document.getElementById("messages");
-                    messagesDiv.innerHTML = "";
+                    messagesDiv.innerHTML = ""; // Clear existing messages
                     for (const key in messages) {
                         const msg = messages[key];
                         const messageElement = document.createElement("div");
