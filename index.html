@@ -70,35 +70,40 @@
           text: messageText,
           timestamp: Date.now()
         };
-        
+
         // Push message to both sender's and recipient's Firebase paths
         push(ref(database, 'messages/' + currentUserId + '/' + currentRecipientId), message)
           .then(() => {
             push(ref(database, 'messages/' + currentRecipientId + '/' + currentUserId), message);
             document.getElementById("message").value = ""; // Clear message input
-          });
+          })
+          .catch(err => console.error("Error sending message: ", err));
       } else {
         alert("Please enter both recipient ID and a message.");
       }
     }
 
     // Listen for new messages and update UI in real-time
-    onChildAdded(ref(database, 'messages/'), (snapshot) => {
-      const messages = snapshot.val();
-      const userId = snapshot.key;
-      if (userId === currentUserId || userId === currentRecipientId) {
+    function listenForMessages(userId, recipientId) {
+      onChildAdded(ref(database, 'messages/' + userId + '/' + recipientId), (snapshot) => {
+        const message = snapshot.val();
         const messagesDiv = document.getElementById("messages");
-        messagesDiv.innerHTML = ""; // Clear existing messages
-        for (const key in messages) {
-          const msg = messages[key];
-          const messageElement = document.createElement("div");
-          messageElement.classList.add(msg.sender === currentUserId ? "message-sender" : "message-receiver");
-          messageElement.innerText = `${msg.sender === currentUserId ? "You" : msg.sender}: ${msg.text}`;
+        const messageElement = document.createElement("div");
+
+        if (message) {
+          messageElement.classList.add(message.sender === currentUserId ? "message-sender" : "message-receiver");
+          messageElement.innerText = `${message.sender === currentUserId ? "You" : message.sender}: ${message.text}`;
           messagesDiv.appendChild(messageElement);
         }
         messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
-      }
-    });
+      });
+    }
+
+    // Function to start listening after sending message
+    window.startListening = function() {
+      listenForMessages(currentUserId, currentRecipientId);
+      listenForMessages(currentRecipientId, currentUserId);
+    }
   </script>
   <style>
     body {
@@ -185,6 +190,7 @@
       <textarea id="message" placeholder="Enter your message" rows="4"></textarea>
       <button onclick="sendMessage()">Send Message</button>
       <div id="messages"></div>
+      <button onclick="startListening()">Start Listening</button>
     </div>
   </div>
 </body>
