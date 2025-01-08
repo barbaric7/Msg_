@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Messaging Portal</title>
   <script type="module">
-    // Import the Firebase modules we need
+    // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getDatabase, ref, set, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-    
-    // Firebase configuration
+
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDpjPHBPiLJLIlOfoENG9O1pMqt4X1hjDs",
       authDomain: "messagingportal-4da7a.firebaseapp.com",
@@ -27,22 +27,36 @@
     let currentUserId = null;
     let currentRecipientId = null;
 
+    // Generate unique ID (simpler version)
+    function generateUserId(username) {
+      return `${username}-${Math.floor(Math.random() * 10000)}`;
+    }
+
     // Register user function
     window.registerUser = function() {
       const username = document.getElementById("username").value.trim();
       if (username) {
-        const userId = `user_${Date.now()}`;
-        set(ref(database, 'users/' + userId), {
+        currentUserId = generateUserId(username);
+        set(ref(database, 'users/' + currentUserId), {
           username: username
         }).then(() => {
-          alert(`Registered successfully! Your Unique ID: ${userId}`);
-          currentUserId = userId;
+          // Display unique ID and show the chat interface
+          document.getElementById("uniqueIdDisplay").innerHTML = `Your Unique ID: <strong>${currentUserId}</strong>`;
+          document.getElementById("copyButton").style.display = "inline-block"; // Show copy button
           document.getElementById("register").style.display = "none";
           document.getElementById("chat").style.display = "block";
         });
       } else {
         alert("Please enter a username.");
       }
+    }
+
+    // Copy the unique ID to clipboard
+    window.copyUserId = function() {
+      const uniqueId = document.getElementById("uniqueIdDisplay").innerText;
+      navigator.clipboard.writeText(uniqueId.replace('Your Unique ID: ', '').trim()).then(() => {
+        alert("Unique ID copied to clipboard!");
+      });
     }
 
     // Send message function
@@ -57,10 +71,10 @@
           timestamp: Date.now()
         };
         
-        // Push the message to Firebase for both sender and recipient
-        push(ref(database, 'messages/' + currentUserId + '/' + recipientId), message)
+        // Push message to both sender's and recipient's Firebase paths
+        push(ref(database, 'messages/' + currentUserId + '/' + currentRecipientId), message)
           .then(() => {
-            push(ref(database, 'messages/' + recipientId + '/' + currentUserId), message);
+            push(ref(database, 'messages/' + currentRecipientId + '/' + currentUserId), message);
             document.getElementById("message").value = ""; // Clear message input
           });
       } else {
@@ -68,7 +82,7 @@
       }
     }
 
-    // Listen for new messages in real-time for both sender and receiver
+    // Listen for new messages and update UI in real-time
     onChildAdded(ref(database, 'messages/'), (snapshot) => {
       const messages = snapshot.val();
       const userId = snapshot.key;
@@ -131,43 +145,45 @@
       background-color: #222222;
       padding: 10px;
       border-radius: 5px;
-      margin-bottom: 20px;
-    }
-    #messages div {
-      margin: 5px 0;
-      padding: 10px;
-      border-radius: 5px;
     }
     .message-sender {
-      background-color: #1e88e5;
-      color: #fff;
       text-align: right;
-      margin-left: 50px;
+      color: #1e88e5;
     }
     .message-receiver {
-      background-color: #333333;
-      color: #fff;
       text-align: left;
-      margin-right: 50px;
+      color: #ffffff;
     }
-    #recipientId, #message {
-      margin-bottom: 20px;
+    #uniqueIdDisplay {
+      margin-top: 10px;
+      font-size: 16px;
+      color: #bbb;
+    }
+    #copyButton {
+      background-color: #4caf50;
+      margin-top: 10px;
+      display: none;
+      cursor: pointer;
+    }
+    #copyButton:hover {
+      background-color: #45a049;
     }
   </style>
 </head>
 <body>
   <div id="container">
-    <h1>Messaging Portal</h1>
     <div id="register">
-      <h2>Register</h2>
+      <h1>Register</h1>
       <input type="text" id="username" placeholder="Enter your username">
       <button onclick="registerUser()">Register</button>
     </div>
     <div id="chat">
-      <h2>Chat</h2>
-      <input type="text" id="recipientId" placeholder="Recipient's Unique ID">
-      <input type="text" id="message" placeholder="Your message">
-      <button onclick="sendMessage()">Send</button>
+      <h1>Messaging Portal</h1>
+      <div id="uniqueIdDisplay"></div>
+      <button id="copyButton" onclick="copyUserId()">Copy ID</button>
+      <input type="text" id="recipientId" placeholder="Enter recipient's unique ID">
+      <textarea id="message" placeholder="Enter your message" rows="4"></textarea>
+      <button onclick="sendMessage()">Send Message</button>
       <div id="messages"></div>
     </div>
   </div>
