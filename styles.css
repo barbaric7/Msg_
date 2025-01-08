@@ -1,0 +1,138 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+}
+
+#container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+h1,
+h2 {
+    text-align: center;
+}
+
+input,
+textarea,
+button {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+}
+
+input,
+textarea {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+button {
+    background-color: #1e88e5;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #1565c0;
+}
+
+#chat {
+    display: none;
+}
+
+#messages {
+    height: 300px;
+    overflow-y: scroll;
+    border: 1px solid #333333;
+    background-color: #222222;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+.message-sender {
+    text-align: right;
+    color: #1e88e5;
+    margin: 5px 0;
+    padding: 5px;
+    background-color: #1e1e1e;
+    border-radius: 5px;
+}
+
+.message-receiver {
+    text-align: left;
+    color: #ffffff;
+    margin: 5px 0;
+    padding: 5px;
+    background-color: #2e2e2e;
+    border-radius: 5px;
+}
+
+.conversation-item {
+    padding: 10px;
+    background-color: #333;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+.conversation-item:hover {
+    background-color: #444;
+}
+
+#uniqueIdDisplay {
+    margin-top: 10px;
+    font-size: 16px;
+    color: #bbb;
+    word-break: break-all;
+}
+
+#copyButton {
+    background-color: #4caf50;
+    margin-top: 10px;
+    display: none;
+}
+
+#copyButton:hover {
+    background-color: #45a049;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+@media (max-width: 600px) {
+    #container {
+        padding: 10px;
+    }
+
+    input,
+    textarea,
+    button {
+        width: 100%;
+    }
+}
