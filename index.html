@@ -7,7 +7,7 @@
   <script type="module">
     // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, set, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getDatabase, ref, set, push, onChildAdded, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
     // Firebase config
     const firebaseConfig = {
@@ -51,6 +51,28 @@
       }
     }
 
+    // Login user function
+    window.loginUser = function() {
+      const userId = document.getElementById("loginId").value.trim();
+      if (userId) {
+        // Check if user exists in database
+        get(ref(database, 'users/' + userId)).then((snapshot) => {
+          if (snapshot.exists()) {
+            currentUserId = userId;
+            // Show chat interface
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("chat").style.display = "block";
+            document.getElementById("uniqueIdDisplay").innerHTML = `Your Unique ID: <strong>${currentUserId}</strong>`;
+            listenForMessages(currentUserId); // Listen for previous and new messages
+          } else {
+            alert("User not found. Please check your ID or register.");
+          }
+        });
+      } else {
+        alert("Please enter your unique ID.");
+      }
+    }
+
     // Copy the unique ID to clipboard
     window.copyUserId = function() {
       const uniqueId = document.getElementById("uniqueIdDisplay").innerText;
@@ -84,8 +106,8 @@
     }
 
     // Listen for new messages and update UI in real-time
-    function listenForMessages(userId, recipientId) {
-      onChildAdded(ref(database, 'messages/' + userId + '/' + recipientId), (snapshot) => {
+    function listenForMessages(userId) {
+      onChildAdded(ref(database, 'messages/' + userId), (snapshot) => {
         const message = snapshot.val();
         const messagesDiv = document.getElementById("messages");
         const messageElement = document.createElement("div");
@@ -97,12 +119,6 @@
         }
         messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
       });
-    }
-
-    // Function to start listening after sending message
-    window.startListening = function() {
-      listenForMessages(currentUserId, currentRecipientId);
-      listenForMessages(currentRecipientId, currentUserId);
     }
   </script>
   <style>
@@ -173,15 +189,29 @@
     #copyButton:hover {
       background-color: #45a049;
     }
+    #loginScreen {
+      display: block;
+    }
+    #register {
+      display: block;
+    }
   </style>
 </head>
 <body>
   <div id="container">
+    <div id="loginScreen">
+      <h1>Login</h1>
+      <input type="text" id="loginId" placeholder="Enter your unique ID">
+      <button onclick="loginUser()">Login</button>
+      <p>Don't have an account? <a href="javascript:void(0);" onclick="showRegister()">Register</a></p>
+    </div>
+
     <div id="register">
       <h1>Register</h1>
       <input type="text" id="username" placeholder="Enter your username">
       <button onclick="registerUser()">Register</button>
     </div>
+
     <div id="chat">
       <h1>Messaging Portal</h1>
       <div id="uniqueIdDisplay"></div>
@@ -190,8 +220,14 @@
       <textarea id="message" placeholder="Enter your message" rows="4"></textarea>
       <button onclick="sendMessage()">Send Message</button>
       <div id="messages"></div>
-      <button onclick="startListening()">Start Listening</button>
     </div>
   </div>
+
+  <script>
+    function showRegister() {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("register").style.display = "block";
+    }
+  </script>
 </body>
 </html>
