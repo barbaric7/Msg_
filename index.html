@@ -1,160 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messaging Portal</title>
+  <script type="module">
+    // Import the Firebase modules we need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, set, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpjPHBPiLJLIlOfoENG9O1pMqt4X1hjDs",
+      authDomain: "messagingportal-4da7a.firebaseapp.com",
+      projectId: "messagingportal-4da7a",
+      storageBucket: "messagingportal-4da7a.firebasestorage.app",
+      messagingSenderId: "727884305223",
+      appId: "1:727884305223:web:deb7b5fd14c2c5156fb262",
+      measurementId: "G-4MWYXL2F3Z"
+    };
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Messaging Portal</title>
-        <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #121212;
-                color: #ffffff;
-                margin: 0;
-                padding: 0;
-            }
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
 
-            #container {
-                max-width: 600px;
-                margin: auto;
-                padding: 20px;
-            }
+    let currentUserId = null;
 
-            h1,
-            h2 {
-                text-align: center;
-            }
+    // Register user function
+    window.registerUser = function() {
+      const username = document.getElementById("username").value.trim();
+      if (username) {
+        const userId = `user_${Date.now()}`;
+        set(ref(database, 'users/' + userId), {
+          username: username
+        }).then(() => {
+          alert(`Registered successfully! Your Unique ID: ${userId}`);
+          currentUserId = userId;
+          document.getElementById("register").style.display = "none";
+          document.getElementById("chat").style.display = "block";
+        });
+      } else {
+        alert("Please enter a username.");
+      }
+    }
 
-            input,
-            button {
-                width: calc(100% - 20px);
-                padding: 10px;
-                margin: 10px 0;
-                border: none;
-                border-radius: 5px;
-            }
+    // Send message function
+    window.sendMessage = function() {
+      const recipientId = document.getElementById("recipientId").value.trim();
+      const messageText = document.getElementById("message").value.trim();
+      if (recipientId && messageText) {
+        const message = {
+          sender: currentUserId,
+          text: messageText,
+          timestamp: Date.now()
+        };
+        push(ref(database, 'messages/' + recipientId), message)
+          .then(() => {
+            document.getElementById("message").value = ""; // Clear message input
+          });
+      } else {
+        alert("Please enter both recipient ID and a message.");
+      }
+    }
 
-            input {
-                background-color: #333333;
-                color: #ffffff;
-            }
-
-            button {
-                background-color: #1e88e5;
-                color: #ffffff;
-                cursor: pointer;
-            }
-
-            button:hover {
-                background-color: #1565c0;
-            }
-
-            #chat {
-                display: none;
-            }
-
-            #messages {
-                height: 300px;
-                overflow-y: scroll;
-                border: 1px solid #333333;
-                background-color: #222222;
-                padding: 10px;
-                border-radius: 5px;
-            }
-
-            #messages div {
-                margin: 5px 0;
-            }
-        </style>
-    </head>
-
-    <body>
-        <div id="container">
-            <h1>Messaging Portal</h1>
-            <div id="register">
-                <h2>Register</h2>
-                <input type="text" id="username" placeholder="Enter your username">
-                <button onclick="registerUser()">Register</button>
-            </div>
-            <div id="chat">
-                <h2>Chat</h2>
-                <input type="text" id="recipientId" placeholder="Recipient's Unique ID">
-                <input type="text" id="message" placeholder="Your message">
-                <button onclick="sendMessage()">Send</button>
-                <div id="messages"></div>
-            </div>
-        </div>
-
-        <script>
-            // Firebase configuration
-            const firebaseConfig = {
-                apiKey: "AIzaSyDpjPHBPiLJLIlOfoENG9O1pMqt4X1hjDs",
-                authDomain: "messagingportal-4da7a.firebaseapp.com",
-                projectId: "messagingportal-4da7a",
-                storageBucket: "messagingportal-4da7a.firebasestorage.app",
-                messagingSenderId: "727884305223",
-                appId: "1:727884305223:web:deb7b5fd14c2c5156fb262",
-                measurementId: "G-4MWYXL2F3Z"
-            };
-
-            // Initialize Firebase
-            const app = firebase.initializeApp(firebaseConfig);
-            const database = firebase.database();
-
-            let currentUserId = null;
-
-            // Register user
-            function registerUser() {
-                const username = document.getElementById("username").value.trim();
-                if (username) {
-                    const userId = `user_${Date.now()}`;
-                    // Store user with their username
-                    database.ref("users/" + userId).set({ username });
-                    alert(`Registered successfully! Your Unique ID: ${userId}`);
-                    currentUserId = userId;
-                    document.getElementById("register").style.display = "none";
-                    document.getElementById("chat").style.display = "block";
-                } else {
-                    alert("Please enter a username.");
-                }
-            }
-
-            // Send message
-            function sendMessage() {
-                const recipientId = document.getElementById("recipientId").value.trim();
-                const messageText = document.getElementById("message").value.trim();
-                if (recipientId && messageText) {
-                    const message = {
-                        sender: currentUserId,
-                        text: messageText,
-                        timestamp: Date.now()
-                    };
-                    // Store the message in the database under recipient's ID
-                    database.ref("messages/" + recipientId).push(message);
-                    document.getElementById("message").value = ""; // Clear message input
-                } else {
-                    alert("Please enter both recipient ID and a message.");
-                }
-            }
-
-            // Listen for incoming messages and display them
-            database.ref("messages/").on("child_added", (snapshot) => {
-                const recipientId = snapshot.key;
-                if (recipientId === currentUserId) {
-                    const messages = snapshot.val();
-                    const messagesDiv = document.getElementById("messages");
-                    messagesDiv.innerHTML = ""; // Clear existing messages
-                    for (const key in messages) {
-                        const msg = messages[key];
-                        const messageElement = document.createElement("div");
-                        messageElement.innerText = `${msg.sender}: ${msg.text}`;
-                        messagesDiv.appendChild(messageElement);
-                    }
-                }
-            });
-        </script>
-    </body>
-
+    // Listen for new messages in real-time
+    onChildAdded(ref(database, 'messages/'), (snapshot) => {
+      const messages = snapshot.val();
+      const recipientId = snapshot.key;
+      if (recipientId === currentUserId) {
+        const messagesDiv = document.getElementById("messages");
+        messagesDiv.innerHTML = ""; // Clear existing messages
+        for (const key in messages) {
+          const msg = messages[key];
+          const messageElement = document.createElement("div");
+          messageElement.innerText = `${msg.sender}: ${msg.text}`;
+          messagesDiv.appendChild(messageElement);
+        }
+      }
+    });
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+    #container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    input, button {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+    }
+    input {
+      background-color: #333333;
+      color: #ffffff;
+    }
+    button {
+      background-color: #1e88e5;
+      color: #ffffff;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1565c0;
+    }
+    #chat {
+      display: none;
+    }
+    #messages {
+      height: 300px;
+      overflow-y: scroll;
+      border: 1px solid #333333;
+      background-color: #222222;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    #messages div {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Messaging Portal</h1>
+    <div id="register">
+      <h2>Register</h2>
+      <input type="text" id="username" placeholder="Enter your username">
+      <button onclick="registerUser()">Register</button>
+    </div>
+    <div id="chat">
+      <h2>Chat</h2>
+      <input type="text" id="recipientId" placeholder="Recipient's Unique ID">
+      <input type="text" id="message" placeholder="Your message">
+      <button onclick="sendMessage()">Send</button>
+      <div id="messages"></div>
+    </div>
+  </div>
+</body>
 </html>
