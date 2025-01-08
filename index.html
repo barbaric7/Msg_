@@ -25,6 +25,7 @@
     const database = getDatabase(app);
 
     let currentUserId = null;
+    let currentRecipientId = null;
 
     // Register user function
     window.registerUser = function() {
@@ -49,13 +50,17 @@
       const recipientId = document.getElementById("recipientId").value.trim();
       const messageText = document.getElementById("message").value.trim();
       if (recipientId && messageText) {
+        currentRecipientId = recipientId;
         const message = {
           sender: currentUserId,
           text: messageText,
           timestamp: Date.now()
         };
-        push(ref(database, 'messages/' + recipientId), message)
+        
+        // Push the message to Firebase for both sender and recipient
+        push(ref(database, 'messages/' + currentUserId + '/' + recipientId), message)
           .then(() => {
+            push(ref(database, 'messages/' + recipientId + '/' + currentUserId), message);
             document.getElementById("message").value = ""; // Clear message input
           });
       } else {
@@ -66,8 +71,8 @@
     // Listen for new messages in real-time for both sender and receiver
     onChildAdded(ref(database, 'messages/'), (snapshot) => {
       const messages = snapshot.val();
-      const recipientId = snapshot.key;
-      if (recipientId === currentUserId) {
+      const userId = snapshot.key;
+      if (userId === currentUserId || userId === currentRecipientId) {
         const messagesDiv = document.getElementById("messages");
         messagesDiv.innerHTML = ""; // Clear existing messages
         for (const key in messages) {
